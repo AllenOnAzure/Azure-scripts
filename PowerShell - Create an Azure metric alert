@@ -1,0 +1,81 @@
+PowerShell - Create an Azure metric alert
+
+<#
+This article explains how to create an Azure Monitor Metric Alert in 5 minutes using the Powershell script below. 
+The alert is scoped across an entire subscription and will trigger for any vm cpu average exceeding a predefined threshold.
+This powershell is broken into 2 parts, based on what components you need to consider during each part:
+#>
+
+<#
+Step 1. Provision the action group that will contain the alert (email) recipient.
+You will need to think about the following components for this section:
+> the alert recipient email address (I would suggest you use a AD distribution group email addy here, to avoid any key man dependency).
+> select a unique / descriptive Action Group Name – this can be re-used per alert. (Especially when you have deployed hundreds of action groups, make sure to avoid naming chaos and confusion going forward). Select a LongName and ShortName for this Group Name. (I think the shortname has a 15 char limit?).
+> identify / or create a resource group which will contain your action group/s (that will not be deleted when a set of resources are deleted in the future).
+
+Step 2. The creation of the metric alert
+> decide on your condition. This means that you need to determine what you are monitoring and your threshold triggers
+> decide on a unique metric name to avoid naming chaos later on.
+> determine your time aggregation, operator and threshold values. (if you are unsure, then open a POC alert via the portal for some guidelines).
+> decide on your windowsize (this is the aggregate / total time period which contains multiple data points) and frequency (which is how often the rule must be run. These form the multiple data points inside the windowsize).
+> decide on a unique alert name to avoid naming chaos later on and add to the destination resource group of the alert.
+> decided on the level of severity as per your business requirements.
+#>
+
+#Powershell Script
+#install the required module if you are running this locally
+Install-Module -Name Az.Insights
+
+#login to client tenant if you are using local powershell tool
+Connect-AzAccount -Tenant "00000000-0000-0000-0000-000000000000" -SubscriptionId "00000000-0000-0000-0000-000000000000"
+
+#Set subscription focus
+Set-AzContext -SubscriptionName "Microsoft Subscription" 
+
+#Part 1 – Create an action group with the email recipient who will receive the budget notifications / emails.
+#(This PowerShell section only works on an EA subscription.Alternatively, use the Azure Portal)
+
+
+$email1 = New-AzActionGroupReceiver `
+-EmailAddress username@domain.com `
+-Name AllensGroup01
+$ActionGroupId = (Set-AzActionGroup -ResourceGroupName rg-allen `
+-Name AllensGroup01 `
+-ShortName AllensGrp01 `
+-Receiver $email1).Id
+
+Get-AzActionGroup -Name "AllensGroup01" -ResourceGroupName rg-allen
+
+#Your email recipients will also receive an email within a few seconds, verifying their addition to the alert action group.
+
+#Part 2 – Create a new metric alert rule
+
+$condition = New-AzMetricAlertRuleV2Criteria -MetricName “Percentage CPU”
+-TimeAggregation Average -Operator GreaterThan
+-Threshold 0.1
+
+#(refer above unsure where this fits in)
+
+#Scoped to subscription level
+#5 minute aggregated window
+#5 minute frequency (<= to windowsize)
+$rgname = “rg-allen”
+$act = [Microsoft.Azure.Management.Monitor.Management.Models.ActivityLogAlertActionGroup]::New(“/subscriptions/00000000-0000-0000-0000-000000000000/resourcegroups/rg-allen/providers/Microsoft.Insights/actiongroups/AllensGroup01”)
+Add-AzMetricAlertRuleV2 `
+-Name “All Allens the VMs in the Subscription” -ResourceGroupName $rgname -WindowSize 0:5 -Frequency 0:5 `
+-TargetResourceScope “/subscriptions/00000000-0000-0000-0000-000000000000” -TargetResourceType “Microsoft.Compute/virtualMachines” `
+-TargetResourceRegion “southafricanorth” `
+-Description “This is Allens powershell test” `
+-Severity 4 `
+-ActionGroup $act `
+-Condition $condition `
+
+<#
+Verify / Edit your Azure Monitor Alert:
+Go to Azure Monitor > Alerts > find your alert Name and verify the settings as per your script. On the far right, follow the breadcrumbs to edit the alert if you wish.
+
+You can verify the alert scope and resources as your script:
+-TargetResourceScope “/subscriptions/00000000-0000-0000-0000-000000000000” -TargetResourceType “Microsoft.Compute/virtualMachines” `
+
+You can verify /edit your conditions as per your script: $condition
+#>
