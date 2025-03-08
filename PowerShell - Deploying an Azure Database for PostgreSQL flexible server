@@ -1,0 +1,39 @@
+PowerShell - Deploying an Azure Database for PostgreSQL flexible server.
+
+This powershell script will deploy the following elements of your PostgreSQL server:
+An Azure Database for PostgreSQL flexible server,
+With subnet integration,
+With a private DNS zone,
+With public access denied with firewall enablement,
+High availability enabled,
+
+<#PowerShell script#>
+#SUBNET INTEGRATION
+$Subnet = '/subscriptions/-4080-9102-80d829b54a5a/resourceGroups/$ResourceGroupName/providers/Microsoft.Network/$VirtualNetworks/$vnetName/subnets/$subnetName'
+$DNSZone = '/subscriptions/-4080-9102-80d829b54a5a/resourceGroups/$ResourceGroupName/providers/Microsoft.Network/dnszones/allenonazuresandbox.co.za'
+
+#VARIABLES
+$ResourceGroupName = "allen-opswat-win"
+$ServerName = "opswatpostgressqldbserver"
+$location = "uaenorth"
+$AdministratorUserName = "Allen"
+$AdministratorLoginPassword = "P@ssword01"
+$SKU = "Standard_D2s_v3"
+$password = "DimensionD@t@" | ConvertTo-SecureString -AsPlainText -Force
+##DEFINE
+New-AzPostgreSqlFlexibleServer `
+-ServerName $ServerName `
+-ResourceGroupName $ResourceGroupName `
+-Location $location `
+-AdministratorUserName "Allen" `
+-AdministratorLoginPassword $password `
+-Sku $SKU `
+-SkuTier GeneralPurpose `
+-Version 12 `
+-StorageInMb 131072 `
+-HaEnabled Enabled `
+-PublicAccess none `
+-Tag @{CustomerName="Customer01"; AutoShutdownSchedule="None"; Environment="sandbox";}
+
+HINT - grab your 
+$DNSZone = '/subscriptions/$subscriptionID//resourceGroups/$dnszoneresourcegroupname/providers/Microsoft.Network/dnszones/$dnszonename'
