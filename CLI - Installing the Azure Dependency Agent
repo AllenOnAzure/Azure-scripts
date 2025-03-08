@@ -1,0 +1,8 @@
+CLI - Installing the Azure Dependency Agent
+
+az vm extension set \
+    --resource-group rg-04 \
+    --vm-name ubuntu03 \
+    --name DependencyAgentLinux \
+    --publisher Microsoft.Azure.Monitoring.DependencyAgent \
+    --version 9.5
