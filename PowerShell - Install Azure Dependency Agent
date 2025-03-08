@@ -1,0 +1,13 @@
+PowerShell - Install Azure Dependency Agent
+
+<#PowerShell script#>
+Set-AzVMExtension `
+-ResourceGroupName $ResourceGroupName `
+-VMName $vm `
+-Name "DependencyAgentWindows" `
+-ExtensionType 'DependencyAgentWindows' `
+-Publisher 'Microsoft.Azure.Monitoring.DependencyAgent' `
+-TypeHandlerVersion '9.10'
+
+*The -Name is customizable but be mindful to use an identifiable value
+eg -Name "ExtensionName-Microsoft.Azure.Monitoring.Dependency"
