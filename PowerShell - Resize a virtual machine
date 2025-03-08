@@ -1,0 +1,14 @@
+PowerShell - Resize a virtual machine
+
+$rgname = "rg-allen"
+$vmname = "vm01"
+$vm = Get-AzVM -ResourceGroupName $rgname -VMName $vmname
+$vm.HardwareProfile.VmSize = 'Standard_B2s'
+Update-AzVM -VM $vm 
+-ResourceGroupName $rgname
+
+#Verify that the VM has been rightsized according to your new SKU
+
+(Get-AzVM `
+-ResourceGroupName $rgname `
+-VMName $vmname).HardwareProfile.VmSize
