@@ -1,0 +1,16 @@
+PowerShell - Install the Workload.WLILinuxExtension
+#Installing the 'Workload.WLILinuxExtension' Extension on Linux
+
+$rgname = 'rg-allen'
+$vmname = 'ubuntu01'
+$location = 'southafricanorth'
+Set-AzVMExtension `
+-ExtensionName 'Workload.WLILinuxExtension' `
+-ResourceGroupName $rgname `
+-VMName $vmname `
+-ExtensionType 'Workload.WLILinuxExtension' `
+-Publisher 'Microsoft.Azure.Monitor.Workloads' `
+-TypeHandlerVersion 0.2 `
+-EnableAutomaticUpgrade $false
+
+#Workload.WLILinuxExtension does not yet support automatic upgrade
