@@ -1,0 +1,13 @@
+PowerShell - Creating a Service Principal
+#(optional) If you are using PIM, you will need to enable PIM to perform this procedure.
+
+#Step 1 - #Create a new Service Principal
+$name = "Allens-FortiSandbox"
+$sp = New-AzADServicePrincipal -DisplayName $name
+
+#Step 2 - Export the SP secret (copy and save the password)
+$sp.PasswordCredentials.SecretText
+
+#Step 3 - Get the Service Principle ApplicationID for the next step (copy and save)
+$name = "Allens-FortiSandbox"
+Get-AzADServicePrincipal -DisplayName $name
