@@ -1,0 +1,131 @@
+PowerShell - Deploy an Azure Application Gateway
+<#
+The aim of this blog is to easily deploy an Azure Application Gateway Standard_v2 tier via Powershell. 
+Identify a dedicated application gateway subnet which will host only application gateways. No other resources will be allowed in this subnet.
+
+Deployment Plan:
+Create Resource Group
+Create a private IP and subnet configuration
+Create a backend group
+Create a Public IP and frontend port configuration
+Create the listener and add a routing rule
+Set the Application Gateway SKU
+Deploy the Application Gateway instance
+#>
+
+#Deployment Steps:
+#Step 1 – Create a resource group container for the application gateway resources. An optional lock can be applied to your resource group.
+
+$ResourceGroupName = "allen-sandbox-ApplicationGateway"
+$location = "southafricanorth"
+New-AzResourceGroup `
+-Name $resourceGroupName `
+-Location $location `
+-Tag @{CustomerName="Customer01"; AutoShutdownSchedule="None"; Environment="sandbox";}
+
+Set-AzResourceLock `
+-LockName "Locked by Allen - Vaxowave" `
+-LockLevel CanNotDelete `
+-LockNotes "This sandbox resource has been locked as per Vaxowave" `
+-ResourceGroupName $ResourceGroupName `
+-Force
+
+#Step 2 – Create a public ip address
+
+$publicIP = New-AzPublicIpAddress `
+    -Name pip-apgw `
+    -ResourceGroupName $resourceGroupName `
+    -AllocationMethod static `
+    -Location $location `
+    -Sku Standard `
+    -Tag @{CustomerName="Customer01"; AutoShutdownSchedule="None"; Environment="sandbox";}
+
+$publicIP | Select-Object Name, IpAddress, ProvisioningState
+
+#Step 3 – Create a private IP and associate to a destination subnet
+
+$ResourceGroupNameVnet = "allen-home"
+$vnetname = "vnet-south-africa"
+$appgwsubnetname = "sub3-appgateway"
+$appgwsubnetcidr = "10.0.1.64/27"
+
+$virtualnetworkvar = Get-AzVirtualNetwork `
+    -Name $vnetname `
+    -ResourceGroupName $ResourceGroupNameVnet
+
+$appGwSubnet = Get-AzVirtualNetworkSubnetConfig `
+    -Name $appgwsubnetname `
+    -VirtualNetwork $virtualnetworkvar
+
+$appGwIpConfig = New-AzApplicationGatewayIPConfiguration `
+    -Name "appgwipconfig" `
+    -Subnet $appGwSubnet
+
+#Step 4 – Create a backend group and set the configuration
+
+$appGwBKPool = New-AzApplicationGatewayBackendAddressPool `
+    -Name "AppGwBKpool"
+
+$appGwBKPoolSettings = New-AzApplicationGatewayBackendHttpSetting `
+    -Name "AppGwpoolSettings" `
+    -Port 80 `
+    -Protocol Http `
+    -CookieBasedAffinity Disabled `
+    -RequestTimeout 30
+
+#Step 5 – Create a Public IP and frontend port configuration
+
+$appGwFESettings = New-AzApplicationGatewayFrontendPort `
+    -Name "AppGwFeSettings" `
+    -Port 80
+
+$appGwFEIpConfig = New-AzApplicationGatewayFrontendIPConfig `
+    -Name "AppGwFEPIP" `
+    -PublicIPAddress $publicIP
+
+#Step 6 – Create the listener and add a routing rule to the backend servers
+
+$appGwListener = New-AzApplicationGatewayHttpListener `
+    -Name "AppGwListener" `
+    -Protocol Http `
+    -FrontendIPConfiguration $appGwFEIpConfig `
+    -FrontendPort $appGwFESettings
+
+$appGwRule = New-AzApplicationGatewayRequestRoutingRule `
+    -Name "AppGwRule" `
+    -RuleType Basic `
+	-Priority 100 `
+    -BackendHttpSettings $appGwBKPoolSettings `
+    -HttpListener $appGwListener `
+    -BackendAddressPool $appGwBKPool
+
+#Step 7 – Set the Application Gateway SKU
+
+$sku = New-AzApplicationGatewaySku `
+    -Name Standard_v2 `
+    -Tier Standard_v2 `
+    -Capacity 2
+
+#Step 8 – Deploy the Application Gateway instance
+
+$ResourceGroupName = "allen-sandbox-ApplicationGateway"
+New-AzApplicationGateway `
+    -Name "ALLEN-DEMO-NE" `
+    -ResourceGroupName $ResourceGroupName `
+    -Location $location `
+    -BackendAddressPools $appGWBKPool `
+    -BackendHttpSettingsCollection $appGwBKPoolSettings `
+    -FrontendIPConfigurations $appGwFEIpConfig `
+    -GatewayIPConfigurations $appGwIpConfig `
+    -FrontendPorts $appGwFESettings `
+    -HttpListeners $appGwListener `
+    -RequestRoutingRules $appGwRule `
+    -Sku $sku `
+    -Tag @{CustomerName="Customer01"; AutoShutdownSchedule="None"; Environment="sandbox";} 
+
+Set-AzResourceLock `
+-LockName "Locked by Allen" `
+-LockLevel CanNotDelete `
+-LockNotes "This sandbox resource has been locked as per best practice" `
+-ResourceGroupName $ResourceGroupName `
+-Force
