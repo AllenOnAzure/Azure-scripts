@@ -1,0 +1,20 @@
+PowerShell - Map a network drive
+If you need to create a new network drive and need to include credentials:
+
+#variables:
+$cred = Get-Credential -Credential USERNAME
+#map the network drive:
+New-PSDrive -Name "J" -Root "\\10.8.0.6\custom" -Persist -PSProvider "FileSystem" -Credential $cred
+
+
+
+#remove a mapped network drive:
+#Get a list of all the mapped drives (verify)
+Get-PSDrive -PSProvider "FileSystem"
+
+#Remove mapped drive by drive letter:
+Remove-PSDrive -Name J
+
+#Remove multiple mapped drives by drive letters:
+Get-PSDrive J, K | Remove-PSDrive
+
