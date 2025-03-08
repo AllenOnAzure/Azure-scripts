@@ -1,0 +1,151 @@
+PowerShell - Provision a Network Security Group
+The powershell script below demonstrates how to create an NSG and populates the Access Control List (ACL) with custom Access Control Entries (ACE’s) / Ingress and Egress Rules.
+
+This powershell script is a step in my Azure Bastion deployment blog.
+
+#Step 1: Create  a new NSG
+$Variables = @{
+  'Name'              = 'Bastion-NSG'
+  'ResourceGroupName' = 'rg-allen' 
+  'Location'          = 'southafricanorth' 
+}
+
+$AzNSG = New-AzNetworkSecurityGroup @Variables
+
+#Step 2: Provision the NSG ACEs / Rules 
+#Create 4 inbound rules
+
+$AzNSG = Get-AzNetworkSecurityGroup `
+-Name ‘Bastion-NSG’ `
+-ResourceGroupName ‘rg-allen’
+
+$Variables1 = @{
+‘Name’ = ‘Bastion-Internet-Ingress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘TCP’
+‘Direction’ = ‘Inbound’
+‘Priority’ = 200
+‘SourceAddressPrefix’ = ‘internet’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘*’
+‘DestinationPortRange’ = 443
+‘Access’ = ‘Allow’
+}
+Add-AzNetworkSecurityRuleConfig @Variables1 | Set-AzNetworkSecurityGroup `
+
+$Variables2 = @{
+‘Name’ = ‘Bastion-GatwayManager-Ingress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘TCP’
+‘Direction’ = ‘Inbound’
+‘Priority’ = 300
+‘SourceAddressPrefix’ = ‘gatewaymanager’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘*’
+‘DestinationPortRange’ = 443
+‘Access’ = ‘Allow’
+}
+Add-AzNetworkSecurityRuleConfig @Variables2 | Set-AzNetworkSecurityGroup `
+
+$Variables3 = @{
+‘Name’ = ‘Bastion-AzureLoadBalancer-Ingress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘TCP’
+‘Direction’ = ‘Inbound’
+‘Priority’ = 400
+‘SourceAddressPrefix’ = ‘azureloadbalancer’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘*’
+‘DestinationPortRange’ = 443
+‘Access’ = ‘Allow’
+}
+Add-AzNetworkSecurityRuleConfig @Variables3 | Set-AzNetworkSecurityGroup `
+
+$Variables4 = @{
+‘Name’ = ‘Bastion-HostCommunication-Ingress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘*’
+‘Direction’ = ‘Inbound’
+‘Priority’ = 500
+‘SourceAddressPrefix’ = ‘virtualnetwork’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘virtualnetwork’
+‘DestinationPortRange’ = 8080,5701
+‘Access’ = ‘Allow’
+}
+Add-AzNetworkSecurityRuleConfig @Variables4 | Set-AzNetworkSecurityGroup `
+
+#Create 4 outbound rules
+
+$Variables5 = @{
+‘Name’ = ‘Bastion-Internet-Egress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘*’
+‘Direction’ = ‘Outbound’
+‘Priority’ = 200
+‘SourceAddressPrefix’ = ‘*’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘internet’
+‘DestinationPortRange’ = ’80’
+‘Access’ = ‘Allow’
+}
+
+Add-AzNetworkSecurityRuleConfig @Variables5 | Set-AzNetworkSecurityGroup `
+
+$Variables6 = @{
+‘Name’ = ‘Bastion-HostCommunication-Egress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘*’
+‘Direction’ = ‘Outbound’
+‘Priority’ = 300
+‘SourceAddressPrefix’ = ‘virtualnetwork’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘virtualnetwork’
+‘DestinationPortRange’ = 8080,5701
+‘Access’ = ‘Allow’
+}
+Add-AzNetworkSecurityRuleConfig @Variables6 | Set-AzNetworkSecurityGroup `
+
+$Variables7 = @{
+‘Name’ = ‘Bastion-AzureCloud-Egress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘TCP’
+‘Direction’ = ‘Outbound’
+‘Priority’ = 400
+‘SourceAddressPrefix’ = ‘*’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘azurecloud’
+‘DestinationPortRange’ = ‘443’
+‘Access’ = ‘Allow’
+}
+
+Add-AzNetworkSecurityRuleConfig @Variables7 | Set-AzNetworkSecurityGroup `
+
+$Variables8 = @{
+‘Name’ = ‘Bastion-RDPSSH-Egress’
+‘NetworkSecurityGroup’ = $AzNSG
+‘Protocol’ = ‘*’
+‘Direction’ = ‘Outbound’
+‘Priority’ = 500
+‘SourceAddressPrefix’ = ‘*’
+‘SourcePortRange’ = ‘*’
+‘DestinationAddressPrefix’ = ‘virtualnetwork’
+‘DestinationPortRange’ = 22,3389
+‘Access’ = ‘Allow’
+}
+
+Add-AzNetworkSecurityRuleConfig @Variables8 | Set-AzNetworkSecurityGroup
+
+#Step 3: Lock NSG
+
+#update these variable to lock your NSG's when deploying in production
+$NSG1 = "FSB-name"
+$ResourceGroupName = "resourcegroupname"
+
+New-AzResourceLock `
+-LockLevel CanNotDelete `
+-LockNotes "This production resource has been locked" `
+-LockName "Locked by Allen" `
+-ResourceName $NSG1 `
+-ResourceType "Microsoft.Network/networkSecurityGroups" `
+-ResourceGroupName $ResourceGroupName
