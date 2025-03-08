@@ -11,5 +11,3 @@ Set-AzVMExtension `
 -VmName $VmName `
 -Location $Location `
 -TypeHandlerVersion 1.0
-
-![Image](https://github.com/user-attachments/assets/ddd8ecae-88dc-42ad-b407-468d00fbef00)
