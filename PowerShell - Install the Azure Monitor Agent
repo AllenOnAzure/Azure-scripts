@@ -1,0 +1,15 @@
+Install the Azure Monitor Agent
+
+#This PowerShell script installs the AMA agent.
+
+<#PowerShell script#>
+Set-AzVMExtension `
+-ExtensionName "AzureMonitorWindowsAgent" `
+-ExtensionType "AzureMonitorWindowsAgent" `
+-Publisher "Microsoft.Azure.Monitor" `
+-ResourceGroupName $ResourceGroupName `
+-VmName $VmName `
+-Location $Location `
+-TypeHandlerVersion 1.0
+
+![Image](https://github.com/user-attachments/assets/ddd8ecae-88dc-42ad-b407-468d00fbef00)
