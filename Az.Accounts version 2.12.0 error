@@ -1,0 +1,77 @@
+If you get the following error below when trying to logon to your CloudShell then this simple fix will resolve your error:
+
+Fix: 
+rm -rf ~/.local/share/powershell/Modules
+
+Error message: 
+
+Import-Module: /opt/microsoft/powershell/7/profile.ps1:13
+Line |
+  13 |  Microsoft.PowerShell.Core\Import-Module -Name PSCloudShellUtility
+     |  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | This module requires Az.Accounts version 2.12.0. An earlier version of Az.Accounts is imported in the current PowerShell session. Please open a new session before importing this module. This error could indicate that multiple
+     | incompatible versions of the Azure PowerShell cmdlets are installed on your system. Please see https://aka.ms/azps-version-error for troubleshooting information.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:308
+Line |
+ 308 |  & ($script:PSCloudShellUtilityModuleInfo){Get-CloudShellTip -ErrorAct …
+     |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+VERBOSE: Authenticating to Azure ...
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+Invoke-CloudShellTelemetry: /opt/microsoft/powershell/7/profile.ps1:95
+Line |
+  95 |          Invoke-CloudShellTelemetry -LogLabel "GETSUBSCRIPTIONID" -Sta …
+     |          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+Import-Module: /opt/microsoft/powershell/7/profile.ps1:395
+Line |
+ 395 |      Microsoft.PowerShell.Core\Import-Module -Name AzurePSDrive
+     |      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | This module requires Az.Accounts version 2.12.0. An earlier version of Az.Accounts is imported in the current PowerShell session. Please open a new session before importing this module. This error could indicate that multiple
+     | incompatible versions of the Azure PowerShell cmdlets are installed on your system. Please see https://aka.ms/azps-version-error for troubleshooting information.
+VERBOSE: Building your Azure drive ...
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+New-PSDrive: /opt/microsoft/powershell/7/profile.ps1:406
+Line |
+ 406 |      $null = Microsoft.PowerShell.Management\New-PSDrive -Name Azure - …
+     |              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Cannot find a provider with the name 'SHiPS'.
+WARNING: Something went wrong while creating Azure drive. You can still use this shell to run Azure PowerShell commands.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:419
+Line |
+ 419 |  & ($script:PSCloudShellUtilityModuleInfo){Set-CloudShellPSReadLineKey …
+     |    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
+InvalidOperation: /opt/microsoft/powershell/7/profile.ps1:64
+Line |
+  64 |      & ($script:PSCloudShellUtilityModuleInfo){param([string]$Label, [ …
+     |        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+     | The expression after '&' in a pipeline element produced an object that was not valid. It must result in a command name, a script block, or a CommandInfo object.
