@@ -1,0 +1,24 @@
+PowerShell - Azure Bastion native RDP or SSH tooling
+#You need to have deployed the Azure Bastion Standard Tier and have an Azure AD account, then you can use the RDP /SSH native tool on your local pc to logon to the destination vm.
+You need to begin by downloading and installing the Azure CLI msi installer file onto your local pc. (I found this step to be essential!) https://aka.ms/installazurecliwindows
+Once the Azure CLI MSI is installed, the you can open the Powershell7 (x64) (Admin) console and enter the following powershell commands:
+#>
+
+#tentant ID which will prompt you to verify to login via browser https://microsoft.com/devicelogin with MFA code
+az login --tenant $tenantID
+
+#tenant subscription
+az account set --subscription $subnetname
+
+#sets the extension without a prompt
+az config set extension.use_dynamic_install=yes_without_prompt
+
+#get Bastion details
+$BastionName = 'allens-az-bastion'
+$BastionRG = 'rg-allen'
+
+#get destination vm resourceID from vm > properties > resourceID
+$VMResourceID= '/subscriptions/$subscriptionID/resourceGroups/$resourceGroups/providers/Microsoft.Compute/virtualMachines/$vmName'
+
+#provision the RDP session:
+az network bastion rdp --name $BastionName --resource-group
