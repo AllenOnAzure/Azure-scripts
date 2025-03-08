@@ -1,0 +1,44 @@
+PowerShell - Provisioning a SFTP Storage Account
+
+#This script deploys a SFTP Azure storage account v2 with LRS.
+#Public access has been denied.
+
+$rg = "rg-allen"
+$staccname = "tempaccount01"
+$location = "southafricanorth"
+$sku = 'Standard_LRS'
+$kind = 'StorageV2'
+$tier = "Hot"
+
+New-AzStorageAccount `
+  -ResourceGroupName $rg `
+  -Name $staccname `
+  -Location $location `
+  -SkuName $sku `
+  -Kind $kind `
+  -AccessTier $tier `
+  -MinimumTlsVersion TLS1_2 `
+  -AllowBlobPublicAccess $false `
+  -AllowSharedKeyAccess $false `
+  -AllowCrossTenantReplication $false 
+  
+Enable-AzStorageBlobDeleteRetentionPolicy `
+  -ResourceGroupName $rg `
+  -StorageAccountName $staccname `
+    -RetentionDays 7
+Enable-AzStorageContainerDeleteRetentionPolicy `
+-ResourceGroupName $rg `
+    -StorageAccountName $staccname `
+    -RetentionDays 7
+
+Additional configuration options: 
+
+ -EnableAzureActiveDirectoryDomainServicesForFile $true 
+ -EnableLargeFileShare
+ -EnableHierarchicalNamespace $true 
+ -EnableSftp $true 
+ -EnableLocalUser $true
+ -AssignIdentity
+ -PublishMicrosoftEndpoint $true 
+ -PublishInternetEndpoint $true 
+ -RoutingChoice MicrosoftRouting
