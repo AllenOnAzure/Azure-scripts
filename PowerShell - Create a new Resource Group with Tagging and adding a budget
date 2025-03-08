@@ -1,0 +1,45 @@
+PowerShell - Create a new Resource Group with Tagging and adding a budget
+
+#Set your focus to the target subscription:
+Set-AzContext -SubscriptionName $SubscriptionName
+
+#Create the new resource group in a target location with tagging
+New-AzResourceGroup `
+-Name $resourcegroupname `
+-Location $Location `   
+-Tag @{Application="<value1>"; `
+TechnicalOwner="<value2>"; `
+WorkloadCriticality="<value3>"; `
+Environment="<value4>";}
+
+#Part 1 – create an action group with the email recipient who will receive the budget notifications / emails.
+(This section only works on an EA subscription when using PowerShell)
+
+$email1 = New-AzActionGroupReceiver `
+-EmailAddress username@doman.com `
+-Name AppCosts01
+$ActionGroupId = (Set-AzActionGroup -ResourceGroupName resourcegroupname01 `
+-Name AppCosts01 `
+-ShortName AppCosts01 `
+-Receiver $email1).Id
+#Part 2 – create the budget on the resource group
+New-AzConsumptionBudget -ResourceGroupName resourcegroupname01 `
+-Amount 100 ` 			
+-Name AppCosts01 `
+-Category Cost `
+-TimeGrain Monthly `
+-StartDate 2022-11-01 `		
+-EndDate 2030-05-31 `		
+-ContactEmail username@doman.com  `
+-NotificationKey Key1 `
+-NotificationThreshold 10 `
+-NotificationEnabled `
+-ContactGroup $ActionGroupId
+
+<#
+*Location = if you are unsure of the region or need to verify the region then you can use Get-AzLocation | ft which will present the the primary region as well as the paired region in a neat readable table as shown below in figure "Get-AzLocation"
+*Amount = is the currency as per your allocated budget
+* Startdate is very important - make the date as new as possible eg the first date of the current month. A very old back dated date will cause the script to fail!
+*End date - I make the end date sufficiently far ahead into the future so as to reduce overhead.
+*NotificationThreshold - This is the only current limitation 
+#>
