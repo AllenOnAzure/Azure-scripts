@@ -1,0 +1,56 @@
+# Authenticate with Azure
+Connect-AzAccount -UseDeviceAuthentication
+
+# Azure Resource Graph Query
+$query = @"
+Resources
+| where type == 'microsoft.compute/disks' and properties.diskState == 'Unattached'
+    or (type == 'microsoft.network/networkinterfaces' and isnull(properties.virtualMachine))
+    or (type == 'microsoft.network/publicIPAddresses' and isnull(properties.ipConfiguration))
+    or (type == 'microsoft.network/loadBalancers' and isempty(properties.backendAddressPools))
+    or (type == 'microsoft.network/networksecuritygroups' and isempty(properties.securityRules))
+    or (type == 'microsoft.compute/snapshots' and isnull(properties.creationData.sourceResourceId))
+    or (type == 'microsoft.network/loadBalancers' and isempty(properties.backendAddressPools) and isempty(properties.loadBalancingRules))
+    or (type == 'microsoft.network/applicationGateways' and isempty(properties.httpListeners) and isempty(properties.backendAddressPools))
+    or (type == 'microsoft.sql/servers/databases' and properties.resourceState == 'Unlinked')
+    or (type == 'microsoft.storage/storageAccounts' and properties.provisioningState == 'Succeeded')
+    or (type == 'microsoft.documentdb/databaseAccounts' and isempty(properties.collections))
+    or (type == 'microsoft.aad/applications' and isempty(properties.requiredResourceAccess))
+    or (type == 'microsoft.managedidentity/userAssignedIdentities' and isnull(properties.principalId))
+    or (type == 'microsoft.keyvault/vaults' and isempty(properties.secrets) and isempty(properties.certificateList) and isempty(properties.keys))
+    or (type == 'microsoft.web/sites' and properties.state == 'Stopped')
+    or (type == 'microsoft.resources/resourceGroups' and isnull(properties.resources))
+| project id, name, type, location
+"@
+
+# Fetch resources matching the query
+$resources = Search-AzGraph -Query $query
+
+# Fetch cost details using Consumption API
+$subscriptionId = "<subscriptionID>"
+$token = (Get-AzAccessToken -ResourceUrl "https://management.azure.com").Token
+$costDetailsUri = "https://management.azure.com/subscriptions/$subscriptionId/providers/Microsoft.Consumption/usageDetails?api-version=2023-03-01"
+
+# Retrieve cost details, handling pagination
+$costDetails = @()
+do {
+    $response = Invoke-RestMethod -Uri $costDetailsUri -Headers @{Authorization = "Bearer $token"}
+    $costDetails += $response.value
+    $costDetailsUri = $response.nextLink
+} while ($costDetailsUri)
+
+# Combine resource data and costs
+$report = @()
+foreach ($resource in $resources) {
+    $cost = $costDetails | Where-Object { $_.resourceId -eq $resource.id }
+    $report += [PSCustomObject]@{
+        Name     = $resource.name
+        Type     = $resource.type
+        Location = $resource.location
+        Cost     = if ($cost) { ($cost | Measure-Object -Property cost -Sum).Sum } else { "Not Available" }
+    }
+}
+
+# Export results to CSV
+$report | Export-Csv -Path "ResourceCostsWithUnattachedResources.csv" -NoTypeInformation
+Write-Output "Resource cost report saved to ResourceCostsWithUnattachedResources.csv"
