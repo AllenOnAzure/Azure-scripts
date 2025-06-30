@@ -1,0 +1,142 @@
+PowerShell - Partner Admin Link (PAL)
+
+https://partner.microsoft.com/en-jm/support/partner-attributes#:~:text=Partner%20Admin%20Link%20(PAL)%20is,measure%20to%20the%20Security%20competency 
+
+#0 Transactional Partner of Record (TPOR):
+If you’re a registered licensing solution provider who has sold a cloud subscription and you were associated with the customer’s cloud subscription at the time of the transaction, you may qualify as the TPOR. This mechanism credits you for the sale and may entitle you to valuable incentives.
+
+
+#1 Partner Admin Link (PAL):
+Ths is for partner recognition, letting partners associate their PartnerID with the credentials used for Azure services delivery. It’s built directly into Azure, using platform telemetry to measure a partner’s influence on Azure consumption with automatic, precise tracking and easy-to-use functionality.
+RBAC ROLE : Reader
+
+#2 Digital Partner of Record (DPOR):
+Partners who help customers design, build, deploy, or manage a solution on Azure may qualify for DPOR. 
+This can help you attain cloud competencies and may entitle you to incentives. 
+You get a single view of customer revenue, usage, and consumption, and the data can be used for cross-sell/upsell opportunities and proactive engagement with customers at risk of non-renewal. Review incentives Microsoft offers to DPORs and enroll by signing into Partner Center.
+The administrator role, also known as the "owner," is the only role within the tenant or account that can attach a partner of record.
+
+
+#3 Claiming Partner of Record (CPOR):
+With CPOR, you can associate yourself with your customer at the subscription or workload level. 
+Get recognized for the engagement and impact that you drive and may help you attain the Cloud Business Applications, 
+Cloud Productivity, Security, and Enterprise Mobility Management competencies. 
+Discover the many incentives offered and submit a claim through Partner Center.
+
+#******************
+##Local PowerShell
+#Step 1 - Create the Service Principal
+
+##Open up your PowerShell window to action these steps.
+
+####### Step 1 - Log into your client tenant
+$TenantID = "e76846f1-8785-4694-9420-f8ddd1fcab1f"	#CRG Technology
+$SubsID = "14643a1d-597b-4575-8c72-5ed4d18bfa82"	#CRG-AllenVisser-Dev-001
+$UniqueDisplayName = "CRG-PartnerGlobalID" 
+$CRGPartnerGlobalID = "6637377" 			
+#6637377 | PartnerLocation | CRG TECHNOLOGY LTD | GB
+
+Connect-AzAccount -Tenant $TenantID -SubscriptionId $SubsID
+
+<#
+Install-Module Microsoft.Graph -Scope CurrentUser -Force
+
+Connect-MgGraph -Scopes "RoleManagement.Read.Directory"
+
+Get-MgRoleManagementDirectoryRoleAssignment -Filter "PrincipalId eq 'adm-allen.visser@crgtechnology.com'"
+OR
+Connect-MgGraph -Scopes "RoleManagement.Read.Directory" Get-MgRoleManagementDirectoryRoleAssignment -Filter "PrincipalId eq 'adm-allen.visser@crgtechnology.com'"
+#>
+
+######## Step 2 - Create a new Service Principal - 
+<#
+To create a service principal in Microsoft Entra ID, you need to have the Application Administrator or Cloud Application Administrator.
+Use a unique descriptive Service Principal name that is unambiguous and easily identifiable in your client tenant across all clients and across all subscriptions)
+
+To delete an existing instance: az ad sp delete --id <object-id>
+az login -
+az ad sp delete --id 81ef4883-b8ab-4844-ab3e-69476d16324b
+
+#>
+
+$sp = New-AzADServicePrincipal -DisplayName $UniqueDisplayName
+
+
+######Step 3 - Export the Service Principal secret (copy and save to notepad)
+$sp.PasswordCredentials.SecretText
+
+
+<####### Step 4- Verify the tenant ID
+#Get the active tenant where the service principal was created.
+(Get-AzContext).Tenant.Id
+#>
+
+###### Step 5 - Get the Service Principle ApplicationID for the next step (copy and save to notepad)
+Get-AzADServicePrincipal -DisplayName $UniqueDisplayName
+
+
+#Step 6 - Login with the newly created Service Principal using ApplicationID as username
+$cred = Get-Credential -UserName $svcprincipal.ApplicationId -Message "Enter Password"
+
+
+#Step 7 - Now login with the Service Principal credentials
+Connect-AzAccount  -Credential $cred -ServicePrincipal -TenantId $TenantID
+
+
+#Step 8 - Link your Partner ID
+New-AzManagementPartner -PartnerId $CRGPartnerGlobalID
+
+
+#Step 9 - Verify 
+Get-AzManagementPartner
+
+--------------------------------------------------------------------------------------------------------------------------------------
+To satisfy the **Claiming Partner of Record (CPOR)** requirements while adhering to the **Principle of Least Privilege (PoLP)**, 
+you can create a custom Azure RBAC role that grants only the permissions necessary for associating with a customer's subscription 
+or workload. Here's an example of a minimal custom role:
+
+---
+
+### **Custom Role Definition for CPOR**
+{
+  "Name": "CRG-CPORCustomRole",
+  "IsCustom": true,
+  "Description": "Custom role for Claiming Partner of Record with minimal permissions.",
+  "Actions": [
+    "Microsoft.Resources/subscriptions/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Resources/deployments/read",
+    "Microsoft.Resources/deployments/write"
+  ],
+  "NotActions": [],
+  "AssignableScopes": [
+    "/subscriptions/{subscriptionId}"
+  ]
+}
+
+---
+
+### **Explanation of Permissions**
+1. **`Microsoft.Resources/subscriptions/read`**: Allows reading subscription details to identify the subscription for CPOR association.
+2. **`Microsoft.Resources/subscriptions/resourceGroups/read`**: Enables reading resource group details within the subscription.
+3. **`Microsoft.Resources/deployments/read`**: Grants access to view deployment details.
+4. **`Microsoft.Resources/deployments/write`**: Allows creating or modifying deployments, which may be necessary for CPOR claims.
+
+---
+
+### **Steps to Implement**
+1. Save the JSON definition to a file (e.g., `CPORCustomRole.json`).
+2. Use Azure CLI or PowerShell to create the custom role:
+
+     az role definition create --role-definition CPORCustomRole.json
+#OR
+     New-AzRoleDefinition -InputFile "CPORCustomRole.json"
+     
+
+3. Assign the custom role to the user or service principal at the appropriate scope (e.g., subscription or resource group).
+
+---
+
+This custom role ensures that the permissions granted are limited to what is strictly necessary for CPOR tasks, aligning with PoLP principles. 
+
+####################################################################
