@@ -1,0 +1,98 @@
+Partner Admin Link (PAL) information across all Azure subscriptions
+
+<#
+Partner Admin Link (PAL) allows Microsoft partners to associate their Partner ID (MPN ID) with Azure resources they manage in a customer’s subscription. This enables Microsoft to attribute Azure Consumed Revenue (ACR) to the partner.
+#>
+
+#Get-Role of your account:
+#CRS:
+Get-AzRoleAssignment -SignInName "allen.visser@crsblaw.onmicrosoft.com" | Select-Object RoleDefinitionName, Scope
+
+#CRG:
+Get-AzRoleAssignment -SignInName "priv#allen.visser@crgtechnology.onmicrosoft.com" | Select-Object RoleDefinitionName, Scope
+
+#---
+# Connect to Azure:
+Connect-AzAccount
+
+
+# Ensure module is loaded:
+Install-Module Az.ManagementPartner -Force
+Import-Module Az.ManagementPartner
+Get-AzManagementPartner
+
+
+# Optionally define partner ID if setting
+# $PartnerId = '6637377'
+
+
+# Loop through all subscriptions:
+$subscriptions = Get-AzSubscription
+
+foreach ($sub in $subscriptions) {
+    Write-Host "Checking subscription: $($sub.Name) [$($sub.Id)]" -ForegroundColor Cyan
+    Set-AzContext -SubscriptionId $sub.Id
+
+    try {
+        $partner = Get-AzManagementPartner
+        if ($partner) {
+            Write-Host "  Partner ID: $($partner.PartnerId)"
+            Write-Host "  Partner Name: $($partner.PartnerName)"
+        } else {
+            Write-Host "  No PAL linked." -ForegroundColor Yellow
+        }
+        # If updating/setting PAL:
+        # if (-Not $partner) { New-AzManagementPartner -PartnerId $PartnerId }
+    } catch {
+        Write-Host "  Error retrieving PAL: $_" -ForegroundColor Red
+    }
+}
+
+#----
+
+# Get all subscriptions in the tenant:
+$subscriptions = Get-AzSubscription
+
+foreach ($sub in $subscriptions) {
+    Write-Host "Subscription: $($sub.Name) [$($sub.Id)]" -ForegroundColor Cyan
+    Set-AzContext -SubscriptionId $sub.Id
+
+    try {
+        $partner = Get-AzManagementPartner -ErrorAction Stop
+        if ($partner) {
+            Write-Host "  Partner ID:   $($partner.PartnerId)"
+            Write-Host "  Partner Name: $($partner.PartnerName)"
+        } else {
+            Write-Host "  No PAL linked." -ForegroundColor Yellow
+        }
+    } catch {
+        Write-Host "  Error reading PAL: $($_.Exception.Message)" -ForegroundColor Red
+    }
+}
+
+###PART 2 - Check DPOR Across All Subscriptions
+
+$subscriptions = Get-AzSubscription
+
+foreach ($sub in $subscriptions) {
+    Set-AzContext -SubscriptionId $sub.Id
+    $partner = Get-AzManagementPartner
+    if ($partner) {
+        Write-Host "Subscription: $($sub.Name) [$($sub.Id)]"
+        Write-Host "  Partner ID:   $($partner.PartnerId)"
+        Write-Host "  Partner Name: $($partner.PartnerName)"
+        Write-Host "  Tenant ID:    $($partner.TenantId)"
+        Write-Host "  State:        $($partner.State)"
+    } else {
+        Write-Host "Subscription: $($sub.Name) [$($sub.Id)]"
+        Write-Host "  No DPOR linked." -ForegroundColor Yellow
+    }
+}
+
+Install-Module -Name Az.ManagementPartner -Force
+
+#Assign a DPOR:
+New-AzManagementPartner -PartnerId '6637377'
+
+# OR UPDATE DPOR:
+Update-AzManagementPartner -PartnerId '6637377'
