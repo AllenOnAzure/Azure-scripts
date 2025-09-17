@@ -1,7 +1,7 @@
 # PowerShell - How to create a Certificate and attach to a Service Principal #
 
-$TenantID= "e76846f1-8785-4694-9420-f8ddd1fcab1f"
-$SubscriptionId= "14643a1d-597b-4575-8c72-5ed4d18bfa82"
+$TenantID= "<tenantID>"
+$SubscriptionId= "<SubscriptionID>"
 $AppName= "Allen-AzureManagement"
 $ApplicationId = "26e0c03d-ca19-4fe6-b91b-6b219b2076a3"
 
@@ -44,3 +44,4 @@ New-AzADAppCredential -ApplicationId $app.AppId -CertValue $certBase64 -StartDat
 # Step 7: Connect using Certificate Thumbprint
 $thumbprint = $cert.Thumbprint
 Connect-AzAccount -ServicePrincipal -ApplicationId $ApplicationId -CertificateThumbprint $thumbprint -Tenant $TenantId
+
