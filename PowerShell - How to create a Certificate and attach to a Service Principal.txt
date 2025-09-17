@@ -1,0 +1,46 @@
+# PowerShell - How to create a Certificate and attach to a Service Principal #
+
+$TenantID= "e76846f1-8785-4694-9420-f8ddd1fcab1f"
+$SubscriptionId= "14643a1d-597b-4575-8c72-5ed4d18bfa82"
+$AppName= "Allen-AzureManagement"
+$ApplicationId = "26e0c03d-ca19-4fe6-b91b-6b219b2076a3"
+
+param (
+    [string]$AppName = "MyAutomationApp",
+    [string]$CertPath = "$env:TEMP\$AppName.pfx",
+    [string]$CertPassword = "P@ssw0rd!",
+    [string]$TenantId = "<your-tenant-id>",
+    [string]$SubscriptionId = "<your-subscription-id>"
+)
+
+# Step 1: Create Self-Signed Certificate
+$cert = New-SelfSignedCertificate `
+    -Subject "CN=$AppName" `
+    -CertStoreLocation "Cert:\CurrentUser\My" `
+    -KeyExportPolicy Exportable `
+    -KeySpec Signature `
+    -NotAfter (Get-Date).AddYears(1)
+
+# Step 2: Export Certificate to PFX
+$securePwd = ConvertTo-SecureString -String $CertPassword -Force -AsPlainText
+Export-PfxCertificate -Cert $cert -FilePath $CertPath -Password $securePwd
+
+# Step 3: Upload Certificate to Azure AD App
+Connect-AzAccount -UseDeviceAuthentication -Scope Process
+
+# Step 4: Export the certificate to get the raw data
+$certBytes = $cert.Export([System.Security.Cryptography.X509Certificates.X509ContentType]::Cert)
+$certBase64 = [System.Convert]::ToBase64String($certBytes)
+
+
+#Step 5:  Get the existing application by display name
+$app = Get-AzADApplication -DisplayName "Allen-AzureManagement"
+
+#Step 6: Add the certificate credential to the application:
+$certBase64 = [System.Convert]::ToBase64String($cert.RawData)
+New-AzADAppCredential -ApplicationId $app.AppId -CertValue $certBase64 -StartDate $cert.NotBefore -EndDate $cert.NotAfter
+
+
+# Step 7: Connect using Certificate Thumbprint
+$thumbprint = $cert.Thumbprint
+Connect-AzAccount -ServicePrincipal -ApplicationId $ApplicationId -CertificateThumbprint $thumbprint -Tenant $TenantId
