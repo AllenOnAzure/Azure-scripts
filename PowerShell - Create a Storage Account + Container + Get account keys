@@ -1,41 +1,53 @@
-PowerShell - Create a Storage Account + Container + Get account keys
+#PowerShell - Create a Storage Account + Container + Get account keys
 
+<#
+SYNOPSIS:
+#1 Creates / verifies a resource group,
+#2 Creates a storage account,
+#3 Create a container in the storage account,
+#4 Pulls the storage account keys,
+#>
+
+
+<# Optional: 
 #Login to the tenant
 Install-Module Az
 Import-Module Az
 Connect-AzAccount
 
 #Change subscriptions focus:
-Set-AzContext -Subscription “5cf7452e-….”
+Set-AzContext -Subscription “<yourSubscriptionID>”
+#>
 
 #Create a new Resource Group container
-$ResourceGroupName = “allen-tf-sandbox”
-$location = “southafricanorth”
-New-AzResourceGroup -Name $ResourceGroupName
--Location $location `
+$ResourceGroupName = “<ResourceGroupName>”
+$location = "uksouth"
+New-AzResourceGroup -Name $ResourceGroupName -Location $location `
 -Tag @{CustomerName="Customer01";
 AutoShutdownSchedule=”None”; `
 Environment=”sandbox”;}
 
-st.acc variables
-$StorageAccName = ‘devopssandboxterraf01’
+#st.acc variables
+$StorageAccName = "<StorageAccName>"
 $StorageType = ‘Standard_LRS’
 
 #Create your storage account
-New-AzStorageAccount -ResourceGroupName $ResourceGroupName
--Name $StorageAccName -Type $StorageType
--Location $location -Tag @{CustomerName="Customer01";
-AutoShutdownSchedule=”None”; `
-Environment=”sandbox”;}
+New-AzStorageAccount `
+    -ResourceGroupName $ResourceGroupName `
+    -Name $StorageAccName `
+    -SkuName $StorageType `
+    -Location $location `
+    -MinimumTlsVersion TLS1_2 `
+    -Tag @{CustomerName="Customer01";
+           AutoShutdownSchedule=”None”; `
+           Environment=”sandbox”;}
 
 #Create your container
 $azstorageacc = Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccName
-$NewContainerName = ‘terraform’
+$NewContainerName = "<containername>"
 $CTX = $azstorageacc.Context
 
 New-AzStorageContainer -Name $NewContainerName -Context $ctx
 
 #Get the storage account access keys
-Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName
--Name $StorageAccName
-
+Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -Name $StorageAccName
