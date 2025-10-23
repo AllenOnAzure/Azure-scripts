@@ -1,4 +1,5 @@
 # Resource Guard - multi tenant deployment # 
+# Synopsis is explained at the bottom of the script
 
 # Deploy Resource Guard across 2 tenants:
 
@@ -71,7 +72,7 @@ Update-AzDataProtectionBackupVault `
     -VaultName $vault.Name `
     -ResourceGuardId $resourceGuardId
 
-<#
+<# Synopsis:
 Steps Explained:
 Step 1 – Define Variables:
 Sets tenant IDs, subscription IDs, resource group name, location, and Resource Guard name.
@@ -112,4 +113,5 @@ Associates the Resource Guard from the target tenant with the backup vault in th
 Key Outcome:
 Resource Guard in target tenant protects critical operations for backup vault in source tenant.
 Cross-tenant access is enabled via service principal with RBAC permissions.
+
 #>	
