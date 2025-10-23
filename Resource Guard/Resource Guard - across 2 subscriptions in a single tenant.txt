@@ -1,0 +1,85 @@
+# Resource Guard - across 2 subscriptions in a single tenant #
+
+# Step 1 - Variables
+$sourceSubId = "<source-subscription-id>"  # Source subscription
+$targetSubId = "<target-subscription-id>"  # Target subscription
+$rgName = "rg-resourceguard-prod"
+$location = "uksouth"
+$resourceGuardName = "rguard-backup-prod"
+
+## Step 2 - Create Resource Group in target subscription
+Set-AzContext -Subscription $targetSubId
+New-AzResourceGroup -Name $rgName -Location $location
+
+
+## Step 3 - Create Resource Guard
+$resourceGuard = New-AzDataProtectionResourceGuard `
+    -SubscriptionId $targetSubId `
+    -ResourceGroupName $rgName `
+    -Name $resourceGuardName `
+    -Location $location
+
+
+## Step 4 - Select operations to protect
+$criticalOperations = $resourceGuard.ResourceGuardOperation.VaultCriticalOperation
+$operationsToBeExcluded = $criticalOperations | Where-Object { 
+    $_ -match "backupSecurityPIN/action" -or 
+    $_ -match "backupInstances/delete" 
+}
+
+
+## Step 5 - Update Resource Guard with protected operations
+Update-AzDataProtectionResourceGuard `
+    -SubscriptionId $targetSubId `
+    -ResourceGroupName $rgName `
+    -Name $resourceGuardName `
+    -ProtectedOperation ($criticalOperations | Where-Object { $_ -notin $operationsToBeExcluded })
+
+
+## Step 6 - Associate Resource Guard with resources in source subscription
+Set-AzContext -Subscription $sourceSubId
+$vault = Get-AzDataProtectionBackupVault -SubscriptionId $sourceSubId -ResourceGroupName "<source-rg-name>"
+$resourceGuardId = $resourceGuard.Id
+
+Update-AzDataProtectionBackupVault `
+    -SubscriptionId $sourceSubId `
+    -ResourceGroupName $vault.ResourceGroupName `
+    -VaultName $vault.Name `
+    -ResourceGuardId $resourceGuardId
+
+<#
+Synopsis:
+Purpose
+Enable Resource Guard in one subscription and associate it with backup resources in another subscription within the same Azure tenant.
+Steps Explained:
+Step 1 – Define Variables
+Sets:
+$sourceSubId: Source subscription where backup vault exists.
+$targetSubId: Target subscription where Resource Guard will be created.
+$rgName, $location, $resourceGuardName: Resource Group and Resource Guard details.
+
+Step 2 – Create Resource Group in Target Subscription:
+Switches context to target subscription using Set-AzContext.
+Creates a Resource Group in the target subscription for Resource Guard.
+
+Step 3 – Create Resource Guard:
+Deploys Resource Guard in the target subscription using New-AzDataProtectionResourceGuard.
+Stores the Resource Guard object in $resourceGuard.
+
+Step 4 – Identify Critical Operations:
+Retrieves all critical operations that Resource Guard can protect.
+Filters out operations that should NOT be protected (e.g., backupSecurityPIN/action and backupInstances/delete).
+
+Step 5 – Update Resource Guard:
+Updates Resource Guard to protect all critical operations except the excluded ones.
+
+Step 6 – Associate Resource Guard with Backup Vault in Source Subscription:
+Switches context to source subscription.
+Retrieves the backup vault in the source subscription.
+Captures the Resource Guard ID from the target subscription.
+Associates the Resource Guard with the backup vault using Update-AzDataProtectionBackupVault.
+
+Key Outcome:
+Resource Guard in target subscription protects critical operations for backup vault in source subscription.
+No cross-tenant complexity here—everything is within the same tenant, just across two subscriptions.
+#>
