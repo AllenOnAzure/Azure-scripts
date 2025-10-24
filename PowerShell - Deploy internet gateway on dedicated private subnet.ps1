@@ -8,9 +8,9 @@
 
 # Variables
 $IGresourceGroup = "allens-internetGateway"
-$resourceGroup = "vnets"
+$resourceGroup = "vnets"    #Vnet RG
 $location = "uksouth"
-$vnetName = "uk-south-private"
+$vnetName = "uk-south-private" 
 $subnetName = "privatesub1" #RT associated vm subnet
 $routeTableName = "InternetRouteTable"
 $routeName = "InternetRoute"
@@ -256,5 +256,6 @@ Write-Host "- Inbound HTTP/HTTPS traffic allowed" -ForegroundColor White
 Write-Host "- All outbound traffic allowed" -ForegroundColor White
 
 Write-Host "- Resources tagged for easy identification" -ForegroundColor White
+
 
 
