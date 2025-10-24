@@ -11,7 +11,7 @@ $IGresourceGroup = "allens-internetGateway"
 $resourceGroup = "vnets"
 $location = "uksouth"
 $vnetName = "uk-south-private"
-$subnetName = "internet-gateway"
+$subnetName = "GatewaySubnet"
 $routeTableName = "InternetRouteTable"
 $routeName = "InternetRoute"
 $internetGatewayName = "allens-internetGateway-dev"
@@ -51,7 +51,7 @@ if ($subnet) {
     # Add subnet configuration
     Add-AzVirtualNetworkSubnetConfig `
         -Name $subnetName `
-        -AddressPrefix "10.0.0.16/28" `
+        -AddressPrefix "10.0.0.32/28" `
         -VirtualNetwork $vnet | Out-Null
 
     $vnet | Set-AzVirtualNetwork
@@ -254,4 +254,5 @@ Write-Host "- All resources checked for existence before creation" -ForegroundCo
 Write-Host "- Outbound internet access enabled via route table" -ForegroundColor White
 Write-Host "- Inbound HTTP/HTTPS traffic allowed" -ForegroundColor White
 Write-Host "- All outbound traffic allowed" -ForegroundColor White
+
 Write-Host "- Resources tagged for easy identification" -ForegroundColor White
