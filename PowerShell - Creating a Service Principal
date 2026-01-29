@@ -1,5 +1,5 @@
 PowerShell - Creating a Service Principal
-#(optional) If you are using PIM, you will need to enable PIM to perform this procedure.
+#(optional) If you are using PIM, you will need to enable PIM to perform this procedure to enable eg Application Administrator
 
 #Step 1 - #Create a new Service Principal
 $name = "Allens-FortiSandbox"
