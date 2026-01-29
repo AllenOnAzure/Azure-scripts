@@ -9,5 +9,4 @@ $sp = New-AzADServicePrincipal -DisplayName $name
 $sp.PasswordCredentials.SecretText
 
 #Step 3 - Get the Service Principle ApplicationID for the next step (copy and save)
-$name = "Allens-FortiSandbox"
 Get-AzADServicePrincipal -DisplayName $name
