@@ -40,7 +40,7 @@ New-AzResourceGroup -Name $ResourceGroupName -Location $location `
         CustomerName = "Customer01"
         AutoShutdownSchedule = "None"
         Environment = "dev"
-		Deployed By = "Allen"
+		"Deployed By" = "Allen"
     }
 
 # Credentials
