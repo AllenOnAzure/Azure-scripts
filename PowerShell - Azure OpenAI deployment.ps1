@@ -3,7 +3,7 @@
 # ===============================
 
 # Parameters
-$subscriptionId = "14643a1d-597b-4575-8c72-5ed4d18bfa82"
+$subscriptionId = "<subID>"
 $resourceGroupName = "rg-openai-demo"
 $location = "uksouth"
 $deploymentName = "openai-deployment-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
